@@ -1,0 +1,121 @@
+"""Coder Agent — Generates production code to make failing tests pass.
+
+Satisfies FR-08: Invoke LLM to generate code with spec + project state context.
+Satisfies FR-09: Present code as diff/summary before applying.
+"""
+
+import json
+from typing import Optional
+
+from forgeai.agents.base_agent import BaseAgent
+from forgeai.core.activity_logger import ActivityLogger
+from forgeai.models.agent_state import AgentContext, AgentResult, AgentRole
+from forgeai.tools.llm_gateway import LLMGateway
+
+
+class CoderAgent(BaseAgent):
+    """Generates production code to satisfy the failing tests written by the QA agent."""
+
+    def __init__(self, llm: LLMGateway, logger: Optional[ActivityLogger] = None):
+        super().__init__(AgentRole.CODER, llm, logger)
+
+    def build_system_prompt(self) -> str:
+        return (
+            "You are an expert Software Developer AI. Your job is to write production-quality "
+            "Python code that makes the provided failing tests PASS.\n\n"
+            "Rules:\n"
+            "1. Read the failing tests carefully — they define the expected behavior\n"
+            "2. Write MINIMAL code to make ALL tests pass\n"
+            "3. Follow Python best practices: type hints, docstrings, error handling\n"
+            "4. Use Pydantic for data models, FastAPI for web APIs\n"
+            "5. Handle edge cases and validation properly\n"
+            "6. Never hardcode API keys, secrets, or credentials\n"
+            "7. Use proper HTTP status codes for API responses\n"
+            "8. Include proper imports\n"
+            "9. Write clean, readable, maintainable code\n"
+            "10. If the task involves database operations, use proper connection handling\n\n"
+            "The code you write will be automatically tested. It MUST pass the provided tests."
+        )
+
+    def build_user_prompt(self, context: AgentContext) -> str:
+        spec = context.specification
+        spec_text = spec.to_prompt_context() if spec else ""
+        task = context.current_task
+
+        # Gather test files (written by QA agent)
+        test_code = ""
+        for fname, content in context.existing_files.items():
+            if "test" in fname.lower() or fname.startswith("tests/"):
+                test_code += f"\n### {fname}\n```python\n{content}\n```\n"
+
+        # Gather existing production code
+        prod_code = ""
+        for fname, content in context.existing_files.items():
+            if "test" not in fname.lower() and not fname.startswith("tests/"):
+                prod_code += f"\n### {fname}\n```python\n{content}\n```\n"
+
+        task_info = ""
+        if task:
+            task_info = (
+                f"\n## Current Task (#{task.id}): {task.title}\n"
+                f"Description: {task.description}\n"
+                f"Target files: {', '.join(task.target_files)}\n"
+            )
+
+        error_context = ""
+        if context.error_message:
+            error_context = (
+                f"\n## Previous Error (FIX THIS):\n"
+                f"```\n{context.error_message}\n```\n"
+                f"\nPrevious attempts:\n"
+            )
+            for i, attempt in enumerate(context.previous_attempts, 1):
+                error_context += f"{i}. {attempt}\n"
+
+        return (
+            f"Write production code to make the failing tests PASS.\n\n"
+            f"## Project Specification\n{spec_text}\n"
+            f"{task_info}\n"
+            f"## Failing Tests (YOUR CODE MUST PASS THESE):\n{test_code}\n"
+            f"## Existing Production Code:\n{prod_code}\n"
+            f"{error_context}\n"
+            f"Respond with a JSON object:\n"
+            f'{{\n'
+            f'  "files": {{\n'
+            f'    "src/module.py": "full file content as string",\n'
+            f'    "src/other.py": "full file content as string"\n'
+            f'  }},\n'
+            f'  "explanation": "Brief explanation of what was implemented",\n'
+            f'  "dependencies_added": ["list of new pip packages if any"]\n'
+            f'}}\n\n'
+            f"IMPORTANT: Respond ONLY with valid JSON. Include COMPLETE file contents, "
+            f"not just snippets. The code MUST make all tests pass."
+        )
+
+    def parse_response(self, raw_response: str, context: AgentContext) -> AgentResult:
+        try:
+            data = json.loads(raw_response)
+        except json.JSONDecodeError:
+            import re
+            json_match = re.search(r'\{.*\}', raw_response, re.DOTALL)
+            if json_match:
+                data = json.loads(json_match.group())
+            else:
+                return AgentResult(
+                    success=False, role=self.role,
+                    error="Failed to parse coder response as JSON",
+                )
+
+        files = data.get("files", {})
+        if not files:
+            return AgentResult(
+                success=False, role=self.role,
+                error="No files generated by coder agent",
+            )
+
+        return AgentResult(
+            success=True,
+            role=self.role,
+            generated_files=files,
+            message=f"Generated {len(files)} files: {data.get('explanation', '')}",
+        )
