@@ -1,0 +1,64 @@
+# ============================================================================
+# ForgeAI — Default Configuration
+# ============================================================================
+# All guardrails, retry limits, and checkpoint triggers are configurable
+# via this single file without code changes. (NFR-03)
+# ============================================================================
+
+llm:
+  provider: "google"               # google | openai | anthropic
+  model: "gemini-2.5-flash"
+  temperature: 0.2
+  max_tokens: 8192
+  api_key_env: "GOOGLE_API_KEY"    # Environment variable name for API key
+
+guardrails:
+  max_files_per_task: 8            # Require approval if exceeded
+  max_lines_per_file: 600          # Warn if generated file exceeds
+  blocked_commands:                 # Commands that MUST never be executed
+    - "rm -rf /"
+    - "del /s /q C:\\"
+    - "format"
+    - "mkfs"
+  require_approval_for:
+    - "database_schema_changes"
+    - "security_sensitive_patterns"
+    - "external_api_calls"
+
+workflow:
+  max_retries: 3                   # Max retry attempts per task
+  retry_delay_seconds: 2           # Delay between retries
+  checkpoints:                     # Points where human approval is required
+    - "after_specification"
+    - "after_architecture"
+    - "after_plan"
+  auto_approve_checkpoints: false  # If true, skip human approval
+
+output:
+  project_dir: "./generated_project"
+  log_file: "./forgeai_activity.log"
+  spec_format: "yaml"             # yaml | json
+  enable_git: true                # Initialize git repo in generated project
+
+testing:
+  framework: "pytest"
+  timeout_seconds: 60
+  coverage_threshold: 70          # Minimum coverage percentage target
+
+docker:
+  enabled: false                  # Set to true to generate Docker artifacts
+  base_image: "python:3.11-slim"
+
+security_audit:
+  enabled: true
+  scan_patterns:
+    - "hardcoded_secrets"
+    - "sql_injection"
+    - "command_injection"
+    - "path_traversal"
+    - "auth_bypass"
+
+web_dashboard:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8000
