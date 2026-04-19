@@ -1,0 +1,156 @@
+[
+  {
+    "tier": 1,
+    "steps": 5,
+    "total_reward": 7.675822851179386,
+    "avg_step_reward": 1.5351645702358772,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.6426645702358771,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0035648345947265625,
+    "step_rewards": [
+      0.59,
+      0.59,
+      0.59,
+      -0.11,
+      6.015822851179386
+    ],
+    "actions": [
+      "delegate_intake",
+      "delegate_architect",
+      "delegate_oversight",
+      "delegate_oversight",
+      "escalate"
+    ]
+  },
+  {
+    "tier": 1,
+    "steps": 1,
+    "total_reward": 2.9525000000000006,
+    "avg_step_reward": 2.9525000000000006,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.0,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0010089874267578125,
+    "step_rewards": [
+      2.9525000000000006
+    ],
+    "actions": [
+      "escalate"
+    ]
+  },
+  {
+    "tier": 1,
+    "steps": 1,
+    "total_reward": 3.5525000000000007,
+    "avg_step_reward": 3.5525000000000007,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.0,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0,
+    "step_rewards": [
+      3.5525000000000007
+    ],
+    "actions": [
+      "escalate"
+    ]
+  },
+  {
+    "tier": 2,
+    "steps": 2,
+    "total_reward": 3.53,
+    "avg_step_reward": 1.765,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.0,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0,
+    "step_rewards": [
+      0.59,
+      2.94
+    ],
+    "actions": [
+      "delegate_intake",
+      "escalate"
+    ]
+  },
+  {
+    "tier": 2,
+    "steps": 21,
+    "total_reward": 24.685914360606137,
+    "avg_step_reward": 1.175519731457435,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.30209143606061395,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0010030269622802734,
+    "step_rewards": [
+      -0.01,
+      0.59,
+      0.59,
+      1.0899999999999999,
+      0.69,
+      0.99,
+      0.49,
+      1.19,
+      1.19,
+      0.99,
+      0.49,
+      0.59,
+      1.19,
+      1.0899999999999999,
+      0.8899999999999999,
+      1.19,
+      0.99,
+      1.0899999999999999,
+      1.69,
+      1.0899999999999999,
+      6.585914360606139
+    ],
+    "actions": [
+      "provide_feedback",
+      "delegate_intake",
+      "delegate_oversight",
+      "provide_feedback",
+      "delegate_oversight",
+      "delegate_oversight",
+      "delegate_oversight",
+      "delegate_architect",
+      "delegate_oversight",
+      "delegate_oversight",
+      "delegate_oversight",
+      "provide_feedback",
+      "delegate_oversight",
+      "provide_feedback",
+      "provide_feedback",
+      "delegate_oversight",
+      "delegate_oversight",
+      "provide_feedback",
+      "delegate_planner",
+      "provide_feedback",
+      "escalate"
+    ]
+  },
+  {
+    "tier": 2,
+    "steps": 2,
+    "total_reward": 4.13,
+    "avg_step_reward": 2.065,
+    "tasks_completed": 0,
+    "test_pass_rate": 0.0,
+    "quality_score": 0.0,
+    "termination_reason": "agent_escalated",
+    "duration": 0.0,
+    "step_rewards": [
+      0.59,
+      3.54
+    ],
+    "actions": [
+      "provide_feedback",
+      "escalate"
+    ]
+  }
+]

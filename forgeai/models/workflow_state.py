@@ -24,6 +24,8 @@ class WorkflowPhase(str, Enum):
     TASK_CODE = "task_code"              # Coder generating code
     TASK_TEST = "task_test"              # Running tests
     TASK_RECOVERY = "task_recovery"      # Recovery on failure
+    OVERSIGHT = "oversight"              # Fleet AI: quality monitoring
+    REVIEW = "review"                    # Snorkel AI: expert reviewer
     SECURITY_AUDIT = "security_audit"    # Extended: post-module scan
     SUMMARY = "summary"                  # Generating final report
     DONE = "done"
@@ -35,16 +37,18 @@ VALID_TRANSITIONS: dict[WorkflowPhase, list[WorkflowPhase]] = {
     WorkflowPhase.IDLE: [WorkflowPhase.INTAKE],
     WorkflowPhase.INTAKE: [WorkflowPhase.CLARIFICATION, WorkflowPhase.SPECIFICATION],
     WorkflowPhase.CLARIFICATION: [WorkflowPhase.SPECIFICATION, WorkflowPhase.INTAKE],
-    WorkflowPhase.SPECIFICATION: [WorkflowPhase.ARCHITECTURE],
-    WorkflowPhase.ARCHITECTURE: [WorkflowPhase.PLANNING],
-    WorkflowPhase.PLANNING: [WorkflowPhase.PLAN_REVIEW],
-    WorkflowPhase.PLAN_REVIEW: [WorkflowPhase.EXECUTION, WorkflowPhase.PLANNING],
-    WorkflowPhase.EXECUTION: [WorkflowPhase.TASK_QA, WorkflowPhase.SECURITY_AUDIT, WorkflowPhase.SUMMARY],
+    WorkflowPhase.SPECIFICATION: [WorkflowPhase.ARCHITECTURE, WorkflowPhase.OVERSIGHT],
+    WorkflowPhase.ARCHITECTURE: [WorkflowPhase.PLANNING, WorkflowPhase.OVERSIGHT],
+    WorkflowPhase.PLANNING: [WorkflowPhase.PLAN_REVIEW, WorkflowPhase.OVERSIGHT],
+    WorkflowPhase.PLAN_REVIEW: [WorkflowPhase.EXECUTION, WorkflowPhase.PLANNING, WorkflowPhase.REVIEW],
+    WorkflowPhase.EXECUTION: [WorkflowPhase.TASK_QA, WorkflowPhase.SECURITY_AUDIT, WorkflowPhase.SUMMARY, WorkflowPhase.OVERSIGHT, WorkflowPhase.REVIEW],
     WorkflowPhase.TASK_QA: [WorkflowPhase.TASK_CODE, WorkflowPhase.TASK_RECOVERY],
-    WorkflowPhase.TASK_CODE: [WorkflowPhase.TASK_TEST, WorkflowPhase.TASK_RECOVERY],
+    WorkflowPhase.TASK_CODE: [WorkflowPhase.TASK_TEST, WorkflowPhase.TASK_RECOVERY, WorkflowPhase.REVIEW],
     WorkflowPhase.TASK_TEST: [WorkflowPhase.EXECUTION, WorkflowPhase.TASK_RECOVERY],
     WorkflowPhase.TASK_RECOVERY: [WorkflowPhase.TASK_QA, WorkflowPhase.TASK_CODE, WorkflowPhase.EXECUTION, WorkflowPhase.ERROR],
-    WorkflowPhase.SECURITY_AUDIT: [WorkflowPhase.SUMMARY],
+    WorkflowPhase.OVERSIGHT: [WorkflowPhase.EXECUTION, WorkflowPhase.SPECIFICATION, WorkflowPhase.ARCHITECTURE, WorkflowPhase.PLANNING, WorkflowPhase.SECURITY_AUDIT],
+    WorkflowPhase.REVIEW: [WorkflowPhase.EXECUTION, WorkflowPhase.TASK_CODE, WorkflowPhase.PLANNING],
+    WorkflowPhase.SECURITY_AUDIT: [WorkflowPhase.SUMMARY, WorkflowPhase.OVERSIGHT],
     WorkflowPhase.SUMMARY: [WorkflowPhase.DONE],
     WorkflowPhase.DONE: [],
     WorkflowPhase.ERROR: [WorkflowPhase.IDLE],
@@ -75,6 +79,10 @@ class WorkflowState(BaseModel):
     
     # Error tracking
     errors: list[str] = Field(default_factory=list)
+
+    # ForgeRL: Oversight and reviewer tracking
+    oversight_reports: list[dict] = Field(default_factory=list)
+    review_feedback: list[dict] = Field(default_factory=list)
     
     def transition_to(self, new_phase: WorkflowPhase) -> bool:
         """Attempt to transition to a new phase. Returns True if valid."""

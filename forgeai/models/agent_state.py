@@ -18,6 +18,8 @@ class AgentRole(str, Enum):
     CODER = "coder"
     SECURITY = "security"
     RECOVERY = "recovery"
+    OVERSIGHT = "oversight"      # Fleet AI: monitors and explains agent behavior
+    REVIEWER = "reviewer"        # Snorkel AI: simulated expert-in-the-loop
 
 
 class AgentContext(BaseModel):
