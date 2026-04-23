@@ -9,15 +9,45 @@ python-dotenv>=1.0.0
 rich>=13.0.0
 click>=8.0.0
 
-# Web Dashboard
+# Web Dashboard + RL Server
 fastapi>=0.110.0
 uvicorn>=0.27.0
 websockets>=12.0
 
+# OpenEnv — Meta PyTorch standardised RL environment framework
+openenv>=0.1.0
+fastmcp>=0.1.0
+
 # Tools
 pytest>=8.0.0
+pytest-timeout>=2.3.0
 gitpython>=3.1.0
 
 # Async
 aiofiles>=23.0.0
 httpx>=0.27.0
+
+# ── ForgeAI-RL: Reinforcement Learning Stack ─────────────────────────────
+
+# TRL — RL trainers (GRPO, PPO, DPO) for LLM post-training
+# Requires PyTorch — install separately for your CUDA version:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+trl>=0.9.0
+
+# HuggingFace ecosystem
+transformers>=4.44.0
+datasets>=2.20.0
+accelerate>=0.33.0
+peft>=0.12.0
+
+# Unsloth — memory-efficient 4-bit QLoRA training + faster inference
+# Install with: pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+# or for stable release: pip install unsloth
+# Note: Unsloth requires CUDA; use --extra-index-url for the right wheel.
+# unsloth>=2024.11  # Uncomment and pin after confirming CUDA version
+
+# HuggingFace Hub — for pushing model/environment to Spaces
+huggingface_hub>=0.24.0
+
+# Tensorboard — reward monitoring during training
+tensorboard>=2.17.0

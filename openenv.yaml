@@ -1,0 +1,6 @@
+spec_version: 1
+name: forgeai_sdlc
+type: space
+runtime: fastapi
+app: forgeai.rl.server.app:app
+port: 7860
