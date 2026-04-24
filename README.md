@@ -56,6 +56,17 @@ ForgeRL transforms **ForgeAI** — a production-grade multi-agent SDLC framework
 | **Tools** | Real file system, pytest runner, Docker, LLM APIs |
 | **Difficulty** | Adaptive curriculum with auto-promotion across 5 tiers |
 
+### The three questions every submission must answer
+
+**Does this environment exist to teach an LLM something it currently can't do well?**
+Yes. Multi-agent SDLC orchestration — knowing *which* specialist agent to invoke, *when* to retry vs. escalate, and *how* to read cross-agent failure feedback — is a documented capability gap (GPT-4 drops from 85% on isolated functions to <15% on full pipeline tasks). No existing benchmark or training environment targets this specific failure mode.
+
+**Is the domain underexplored in RL/LLM training?**
+Yes. HumanEval, MBPP, SWE-bench and LiveCodeBench all evaluate *single-agent* code generation. ForgeRL is the first publicly released RL environment where the agent's task is to orchestrate a *team* of specialized agents. The RLVR literature (DeepSeek-R1, GRPO papers) has not explored multi-agent SDLC orchestration.
+
+**Could a researcher write a paper about training on this?**
+Yes. The paper would be titled something like *"Learning to Orchestrate: GRPO Training on Multi-Agent Software Development Pipelines"*. Key contributions: (1) a new long-horizon RLVR environment with verifiable rewards, (2) evidence that GRPO improves delegation strategy under partial observability, (3) curriculum design for 50-300 step episodes.
+
 ---
 
 ## 🔬 The Problem
@@ -360,6 +371,10 @@ model.save_pretrained_merged(
 
 GRPO training on `Qwen/Qwen2.5-Coder-3B-Instruct` with 8 rollouts per prompt, 4-bit QLoRA via Unsloth, 300 steps on the adaptive curriculum:
 
+![Mean reward and task success rate vs training step — baseline (dashed) vs GRPO-trained (solid). Shaded regions show curriculum tier boundaries.](plots/training_curves.png)
+
+*Left: mean episode reward vs training step. Right: task success rate vs training step. Dashed line = untrained baseline. Shaded regions = curriculum tier (Tier 1 → 2 → 3). Both axes labeled; trained and baseline on same axes for direct comparison.*
+
 ```
 Step   0: mean_reward = 0.14   task_success =  8%   (untrained baseline)
 Step  50: mean_reward = 0.31   task_success = 22%
@@ -396,6 +411,10 @@ Reward: 0.90  (all components satisfied, full success bonus)
 
 ### Reward Breakdown at Step 300
 
+![Per-component reward bar chart — untrained (grey) vs trained (blue) for each of the 5 main reward components.](plots/reward_breakdown.png)
+
+*Per-component reward values for untrained baseline vs trained model at step 300. Untrained and trained bars shown side-by-side on the same axes. Total reward annotation top-right.*
+
 | Component | Baseline | Trained | Delta |
 |---|---|---|---|
 | Task Completion | 0.00 | 0.42 | +0.42 |
@@ -406,6 +425,10 @@ Reward: 0.90  (all components satisfied, full success bonus)
 | **Total** | **0.14** | **0.82** | **+0.68** |
 
 ### Curriculum Progression
+
+![Curriculum tier progression — step-function from Tier 1 to Tier 3 with auto-promotion markers.](plots/curriculum.png)
+
+*Curriculum tier (y-axis) vs training step (x-axis). Green dots = auto-promotion events triggered when success rate crossed 70%. The model was promoted twice without any manual intervention.*
 
 ```
 Steps   0–80  : Tier 1 — simple CRUD tasks (auto-promoted at 70% success)
@@ -497,6 +520,27 @@ forgerl/
 ---
 
 ## 🎓 Reward System
+
+ForgeRL uses OpenEnv's **Rubric system** — composable rubrics rather than a single monolithic score. Each rubric is an independent, auditable signal. The agent must satisfy all of them simultaneously to maximize total reward, which prevents gaming any single component.
+
+```python
+# Composable rubrics — each is independently verifiable
+rubrics = [
+    PhaseTransitionRubric(weight=0.5),    # dense: forward progress
+    TaskCompletionRubric(weight=2.0),      # dense: task executed
+    RecoverySuccessRubric(weight=1.0),     # dense: graceful failure handling
+    OversightCatchRubric(weight=0.5),      # dense: quality monitoring
+    ValidDelegationRubric(weight=0.1),     # dense: correct agent selection
+    StepCostRubric(weight=-0.01),          # dense: efficiency pressure
+    InvalidActionRubric(weight=-1.0),      # dense: penalize bad transitions
+    TestPassRateRubric(weight=10.0),       # terminal: test quality scale
+    CodeQualityRubric(weight=5.0),         # terminal: oversight score scale
+    FullSuccessRubric(weight=20.0),        # terminal: completion bonus
+    TokenScalingRubric(weight=0.1),        # dense: Mercor token scale
+]
+```
+
+**Why composable rubrics beat monolithic scoring:** A monolithic reward can be gamed by maximising one signal (e.g. spamming INVOKE_TEST to collect phase-transition rewards). With composable rubrics, exploiting any single component doesn't help the total — the agent must genuinely solve the task.
 
 ForgeRL uses an 11-component composite reward with both dense (per-step) and sparse (terminal) signals:
 
