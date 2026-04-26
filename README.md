@@ -1,3 +1,16 @@
+---
+title: ForgeRL SDLC Environment
+emoji: 🔨
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 4.44.0
+app_file: app.py
+pinned: false
+license: mit
+short_description: Multi-Agent Software Engineering RL Environment (OpenEnv)
+---
+
 # 🔨 ForgeRL — Multi-Agent Software Engineering RL Environment
 
 <p align="center">
