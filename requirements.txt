@@ -21,3 +21,4 @@ httpx>=0.27.0
 
 # Optional: real LLM sub-agents (Space runs in simulated mode if key absent)
 google-generativeai>=0.8.0
+pyaudioop>=0.3.1
