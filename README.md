@@ -383,23 +383,22 @@ model.save_pretrained_merged(
 
 ### Training Results
 
-GRPO training on `Qwen/Qwen2.5-Coder-3B-Instruct` with 8 rollouts per prompt, 4-bit QLoRA via Unsloth, 300 steps on the adaptive curriculum:
+GRPO training on `Qwen/Qwen2.5-Coder-3B-Instruct` with 8 rollouts per prompt, 4-bit QLoRA via Unsloth on the adaptive curriculum. We evaluated the model after 100 and 300 training steps.
 
-![Mean reward and task success rate vs training step — baseline (dashed) vs GRPO-trained (solid). Shaded regions show curriculum tier boundaries.](plots/training_curves.png)
+#### Reward Curves (100 Steps)
+![Reward curves after 100 training steps](images/reward_curves_100.png)
+*Early training phase showing rapid initial policy improvement.*
 
-*Left: mean episode reward vs training step. Right: task success rate vs training step. Dashed line = untrained baseline. Shaded regions = curriculum tier (Tier 1 → 2 → 3). Both axes labeled; trained and baseline on same axes for direct comparison.*
+#### Reward Curves (300 Steps)
+![Reward curves after 300 training steps](images/reward_curves_300.png)
+*Extended training phase demonstrating sustained learning and convergence across curriculum tiers.*
 
-```
-Step   0: mean_reward = 0.14   task_success =  8%   (untrained baseline)
-Step  50: mean_reward = 0.31   task_success = 22%
-Step 100: mean_reward = 0.48   task_success = 41%
-Step 150: mean_reward = 0.61   task_success = 57%
-Step 200: mean_reward = 0.71   task_success = 68%
-Step 250: mean_reward = 0.78   task_success = 76%
-Step 300: mean_reward = 0.82   task_success = 81%   (trained model)
-```
+### Evaluation Results
 
-**73 percentage point improvement** in task success rate over 300 steps.
+We evaluated the trained models on held-out tasks to measure actual orchestration capability.
+
+![Evaluation results showing model performance](images/evaluation_results.png)
+*Evaluation metrics showing verifiable performance improvement compared to the baseline.*
 
 ### Before vs. After: Same Task, Same Prompt
 
@@ -423,32 +422,6 @@ Action: INVOKE_SECURITY → audit passed
 Reward: 0.90  (all components satisfied, full success bonus)
 ```
 
-### Reward Breakdown at Step 300
-
-![Per-component reward bar chart — untrained (grey) vs trained (blue) for each of the 5 main reward components.](plots/reward_breakdown.png)
-
-*Per-component reward values for untrained baseline vs trained model at step 300. Untrained and trained bars shown side-by-side on the same axes. Total reward annotation top-right.*
-
-| Component | Baseline | Trained | Delta |
-|---|---|---|---|
-| Task Completion | 0.00 | 0.42 | +0.42 |
-| Phase Transition | 0.08 | 0.18 | +0.10 |
-| Recovery Success | 0.00 | 0.09 | +0.09 |
-| Oversight Catch | 0.02 | 0.06 | +0.04 |
-| Valid Delegation | 0.04 | 0.07 | +0.03 |
-| **Total** | **0.14** | **0.82** | **+0.68** |
-
-### Curriculum Progression
-
-![Curriculum tier progression — step-function from Tier 1 to Tier 3 with auto-promotion markers.](plots/curriculum.png)
-
-*Curriculum tier (y-axis) vs training step (x-axis). Green dots = auto-promotion events triggered when success rate crossed 70%. The model was promoted twice without any manual intervention.*
-
-```
-Steps   0–80  : Tier 1 — simple CRUD tasks (auto-promoted at 70% success)
-Steps  80–200 : Tier 2 — class + multiple methods, test recovery
-Steps 200–300 : Tier 3 — REST APIs, multi-file projects
-```
 
 ### Who benefits
 
